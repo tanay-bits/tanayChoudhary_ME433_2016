@@ -58,10 +58,17 @@ int main() {
     LATAbits.LATA4 = 1;   // A4 initially high
     
     __builtin_enable_interrupts();
-    
+    _CP0_SET_COUNT(0);
     while(1) {
-	    // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
-		// remember the core timer runs at half the CPU speed
+        while(PORTBbits.RB4 == 0){
+            LATAbits.LATA4 = 0;     // keep LED off when push button is pressed
+        }
+        
+	    
+		if (_CP0_GET_COUNT()>6000){ // the core timer runs at half the CPU speed
+            LATAbits.LATA4 = !LATAbits.LATA4;   // toggle LED at 2000 Hz
+            _CP0_SET_COUNT(0);                  // reset count
+        }
     }
     
     
