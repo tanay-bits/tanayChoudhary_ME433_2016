@@ -119,6 +119,11 @@ int main() {
         // triangle wave at 5 Hz
         voltageB = 255.0/4800000 * _CP0_GET_COUNT();
         setVoltage(channelB, voltageB);
+        
+        unsigned short i = 0;
+        while(i < 24000) {
+            i++;
+        }
     }
         
 }
