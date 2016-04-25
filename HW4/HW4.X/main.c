@@ -62,12 +62,19 @@ unsigned int SPI1_IO(unsigned int write) {
 }
 
 // Tell DAC to output analog voltage; channel 0: DAC_A, channel 1: DAC_B
-void setVoltage(char channel, char voltage) {
-    CS = 0; // CS pin on DAC requires active low to enable
+void setVoltage(char channel, unsigned char voltage) {
+//    CS = 0; // CS pin on DAC requires active low to enable
     char configbits = channel << 3 | 0b0011;
     unsigned int word = (configbits << 12) | (voltage << 4);
     SPI1_IO(word);
-    CS = 1; // stop transfer of data
+//    CS = 1; // stop transfer of data
+}
+
+void initI2C2() {
+    // turn off analog on I2C pins
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
+    
 }
 
 int main() {
@@ -93,18 +100,27 @@ int main() {
     // SPI initialize
     initSPI1();
     
+    // I2C initialize
+    initI2C();
+    
     __builtin_enable_interrupts();
-    _CP0_SET_COUNT(0);
+//    _CP0_SET_COUNT(0);   
+    char channel = 1;
+    unsigned char voltage = 200;
     while(1) {
-        while(PORTBbits.RB4 == 0){
-            LATAbits.LATA4 = 0;     // keep LED off when push button is pressed
-        }
         
-	    
-		if (_CP0_GET_COUNT()>6000){ // the core timer runs at half the CPU speed
-            LATAbits.LATA4 = !LATAbits.LATA4;   // toggle LED at 2000 Hz
-            _CP0_SET_COUNT(0);                  // reset count
-        }
+        CS = 0;
+        setVoltage(channel, voltage);
+        CS = 1;
+        
+        //      while(PORTBbits.RB4 == 0){
+//            LATAbits.LATA4 = 0;     // keep LED off when push button is pressed
+//        }
+//        
+//		if (_CP0_GET_COUNT()>6000){ // the core timer runs at half the CPU speed
+//            LATAbits.LATA4 = !LATAbits.LATA4;   // toggle LED at 2000 Hz
+//            _CP0_SET_COUNT(0);                  // reset count
+//        }
     }
     
     
