@@ -1,5 +1,6 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
+#include<math.h>         // math lib for sin function
 
 #define CS LATBbits.LATB15 // chip select pin for SPI
 
@@ -39,43 +40,46 @@
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
 void initSPI1() {
+    // turn off analog on SPI pins
+    ANSELBbits.ANSB15 = 0;
+    ANSELBbits.ANSB13 = 0;
+    
     SPI1CON = 0; // turn off the SPI module and reset it
     SPI1BUF; // clear the rx buffer by reading from it
-    SPI1BRG = 0x2; // baud rate to 7.5 MHz; SPI1BRG = (48000000/(2*desired))-1
+    SPI1BRG = 1; // baud rate to fastest; SPI1BRG = (48000000/(2*desired))-1
     SPI1STATbits.SPIROV = 0; // clear the overflow bit
     SPI1CONbits.MSTEN = 1; // master operation
     SPI1CONbits.MODE16 = 1; // 16 bits of data sent per transfer
     SPI1CONbits.ON = 1; // turn on SPI1
     
-    RPB15Rbits.RPB15R = 0b0011; //B15 is SS1 output
+//    RPB15Rbits.RPB15R = 0b0011; //B15 is SS1 output
     RPB13Rbits.RPB13R = 0b0011; //B13 is SDO1 output
     TRISBbits.TRISB15 = 0; //SS1 pin is digital output
-//    CS = 0; //Chip Select on DAC requires active low to enable
 }
 
 // Send a 16-bit word via SPI
-unsigned int SPI1_IO(unsigned int write) {
-//    CS = 0; // CS pin on DAC requires active low to enable
+unsigned short SPI1_IO(unsigned short write) {
     SPI1BUF = write; // send a data byte via SPI
-//    CS = 1; // stop transfer of data
+    while (!SPI1STATbits.SPIRBF) { // wait to receive the byte
+        ;
+    }
     return SPI1BUF; // clear the rx buffer by reading from it
 }
 
 // Tell DAC to output analog voltage; channel 0: DAC_A, channel 1: DAC_B
 void setVoltage(char channel, unsigned char voltage) {
-//    CS = 0; // CS pin on DAC requires active low to enable
-    char configbits = channel << 3 | 0b0011;
-    unsigned int word = (configbits << 12) | (voltage << 4);
+    CS = 0; // CS pin on DAC requires active low to enable
+    char configbits = channel << 3 | 0b0111;
+    unsigned short word = (configbits << 12) | (voltage << 4);
     SPI1_IO(word);
-//    CS = 1; // stop transfer of data
+    CS = 1; // stop transfer of data
 }
 
-void initI2C2() {
-    // turn off analog on I2C pins
-    ANSELBbits.ANSB2 = 0;
-    ANSELBbits.ANSB3 = 0;
-    
-}
+//void initI2C2() {
+//    // turn off analog on I2C pins
+//    ANSELBbits.ANSB2 = 0;
+//    ANSELBbits.ANSB3 = 0;   
+//}
 
 int main() {
 
@@ -92,36 +96,29 @@ int main() {
 
     // disable JTAG to get pins back
     DDPCONbits.JTAGEN = 0;
-    
-    // do your TRIS and LAT commands here
-//    TRISAbits.TRISA4 = 0; // A4 as output
-//    LATAbits.LATA4 = 1;   // A4 initially high
-    
+
     // SPI initialize
     initSPI1();
     
     // I2C initialize
-    initI2C();
+//    initI2C();
     
     __builtin_enable_interrupts();
-//    _CP0_SET_COUNT(0);   
-    char channel = 1;
-    unsigned char voltage = 200;
+      
+    char channelA = 0;
+    char channelB = 1;
+    unsigned char voltageA;
+    unsigned char voltageB;
+
+    _CP0_SET_COUNT(0);
     while(1) {
+        // sine wave at 10 Hz
+        voltageA = 127 + 127*sin(6.28/2400000 * _CP0_GET_COUNT());
+        setVoltage(channelA, voltageA);
         
-        CS = 0;
-        setVoltage(channel, voltage);
-        CS = 1;
-        
-        //      while(PORTBbits.RB4 == 0){
-//            LATAbits.LATA4 = 0;     // keep LED off when push button is pressed
-//        }
-//        
-//		if (_CP0_GET_COUNT()>6000){ // the core timer runs at half the CPU speed
-//            LATAbits.LATA4 = !LATAbits.LATA4;   // toggle LED at 2000 Hz
-//            _CP0_SET_COUNT(0);                  // reset count
-//        }
+        // triangle wave at 5 Hz
+        voltageB = 255.0/4800000 * _CP0_GET_COUNT();
+        setVoltage(channelB, voltageB);
     }
-    
-    
+        
 }
