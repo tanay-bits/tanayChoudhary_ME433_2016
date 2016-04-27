@@ -1,6 +1,7 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
 #include<math.h>         // math lib for sin function
+#include "i2c_master_noint.h" // i2c2 lib
 
 #define CS LATBbits.LATB15 // chip select pin for SPI
 
@@ -39,6 +40,7 @@
 #pragma config FUSBIDIO = ON // USB pins controlled by USB module
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
+// Initialize SPI1
 void initSPI1() {
     // turn off analog on SPI pins
     ANSELBbits.ANSB15 = 0;
@@ -75,11 +77,13 @@ void setVoltage(char channel, unsigned char voltage) {
     CS = 1; // stop transfer of data
 }
 
-//void initI2C2() {
-//    // turn off analog on I2C pins
-//    ANSELBbits.ANSB2 = 0;
-//    ANSELBbits.ANSB3 = 0;   
-//}
+// Initialize I2C2
+void initI2C2() {
+    // turn off analog on I2C pins
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
+    i2c_master_setup();
+}
 
 int main() {
 
@@ -101,7 +105,10 @@ int main() {
     initSPI1();
     
     // I2C initialize
-//    initI2C();
+    initI2C2();
+    
+    // Expander initialize
+    initExpander();
     
     __builtin_enable_interrupts();
       
@@ -120,10 +127,16 @@ int main() {
         voltageB = 255.0/4800000 * _CP0_GET_COUNT();
         setVoltage(channelB, voltageB);
         
-        unsigned short i = 0;
-        while(i < 24000) {
-            i++;
-        }
+        setExpander(0,1);
+//        unsigned short i = 0;
+//        if (getExpander(7) == 0) {
+////            while (i < 24000) {
+////                i++;
+////            }
+//            setExpander(0,1);
+//        } // turn on LED
+//        else {setExpander(0,0);
+//        } // turn off LED  
     }
         
 }
