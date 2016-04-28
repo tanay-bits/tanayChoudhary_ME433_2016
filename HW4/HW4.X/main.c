@@ -127,16 +127,12 @@ int main() {
         voltageB = 255.0/4800000 * _CP0_GET_COUNT();
         setVoltage(channelB, voltageB);
         
-        setExpander(0,1);
-//        unsigned short i = 0;
-//        if (getExpander(7) == 0) {
-////            while (i < 24000) {
-////                i++;
-////            }
-//            setExpander(0,1);
-//        } // turn on LED
-//        else {setExpander(0,0);
-//        } // turn off LED  
+        // turn on LED (0) if pushbutton (7) is pressed
+        if (getExpander(7) == 0) {
+            setExpander(0,1);
+        } // turn on LED
+        else {setExpander(0,0);
+        } // turn off LED  
     }
         
 }

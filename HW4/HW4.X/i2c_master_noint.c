@@ -6,7 +6,7 @@
 #include "i2c_master_noint.h"
 
 void i2c_master_setup(void) {
-    I2C2BRG = 53; // I2CBRG = [1/(2*Fsck) - PGD]*Pblck - 2 
+    I2C2BRG = 250; // I2CBRG = [1/(2*Fsck) - PGD]*Pblck - 2 
     I2C2CONbits.ON = 1; // turn on the I2C2 module
 }
 
@@ -81,24 +81,17 @@ unsigned char readByte(unsigned char address) {
 }
 
 void initExpander(void) {
-    writeByte(MCP23008_IOCON, 0b00111000);
+    writeByte(MCP23008_IOCON, 0b00110000);
     writeByte(MCP23008_IODIR, 0b11110000);
-    writeByte(MCP23008_OLAT, 0b00000000);
 }
 
-void setExpander(int pin, int level) {
-    int i;
-    unsigned char output = 0b1;
-    unsigned char pin_status = readByte(MCP23008_GPIO);
-    output = output << pin;
-    if (level == 1) writeByte(MCP23008_OLAT, pin_status | output);
-    else if (level == 0) writeByte(MCP23008_OLAT, pin_status & (~output));
+void setExpander(char pin, char level) {
+    char gpioValue = level << pin;
+    writeByte(MCP23008_GPIO, gpioValue);
 }
 
-unsigned char getExpander(int pin) {
-    int i;
-    unsigned char output = 0b1;
-    unsigned char pin_status = readByte(MCP23008_GPIO);
-    output = output << pin;
-    return (output & pin_status) >> pin;
+char getExpander(char pin) {
+    char read = readByte(MCP23008_GPIO);
+    read = read >> pin;
+    return read;
 }
