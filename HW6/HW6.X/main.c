@@ -3,6 +3,8 @@
 #include "i2c.h"         // I2C2 lib
 #include "imu.h"         // LSM6DS33 IMU lib
 
+static volatile short temp_raw, accX_raw, accY_raw, accZ_raw, gyroX_raw, gyroY_raw, gyroZ_raw;
+
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
 #pragma config JTAGEN = OFF // no jtag
@@ -46,6 +48,43 @@ void initI2C2() {
     i2c_master_setup();
 }
 
+// Initialize OC1, OC2, Timer2 for two PWM's
+void initPWM() {
+    RPA0Rbits.RPA0R = 0b0101;   //set A0 as OC1
+    RPA1Rbits.RPA1R = 0b0101;   //set A1 as OC2
+    
+    T2CONbits.TCKPS = 0b100; //Timer2 prescaler N=16 (1:16)
+    PR2 = 2999; //period = (PR2+1) * N * 20.833 ns = 1000 us => 1 kHz
+    TMR2 = 0; // initial Timer2 count is 0
+    IPC2bits.T2IP = 5; // priority for Timer2 interrupt
+    IFS0bits.T2IF = 0; // clear Timer2 interrupt flag
+    IEC0bits.T2IE = 1; // enable Timer2 interrupt
+    T2CONbits.ON = 1; // turn on Timer2
+    
+    OC1CONbits.OCTSEL = 0; //use Timer 2
+    OC1CONbits.OCM = 0b110; //PWM mode without fault pin; other OC1CON bits are defaults
+    OC1RS = 1500; // initialize duty cycle = OC1RS/(PR2+1) = 50%
+    OC1R = 1500; // initialize before turning OC1 on; afterward it is read-only
+    OC1CONbits.ON = 1; // turn on OC1
+    
+    OC2CONbits.OCTSEL = 0; //use Timer 2
+    OC2CONbits.OCM = 0b110; //PWM mode without fault pin; other OC1CON bits are defaults
+    OC2RS = 1500; // initialize duty cycle = OC1RS/(PR2+1) = 50%
+    OC2R = 1500; // initialize before turning OC1 on; afterward it is read-only
+    OC2CONbits.ON = 1; // turn on OC2
+}
+
+void __ISR(_TIMER_2_VECTOR, IPL5SOFT) PWM(void) {
+    float accX, accY;
+    accX = accX_raw * 2.0 / 32768;  // accel in g
+    accY = accY_raw * 2.0 / 32768;  // accel in g
+    
+    OC1RS = (unsigned int)(1500 + 1500 * accX);
+    OC2RS = (unsigned int)(1500 + 1500 * accY);
+    
+    IFS0bits.T2IF = 0; // clear interrupt flag
+}
+
 int main() {
 
     __builtin_disable_interrupts();
@@ -68,23 +107,28 @@ int main() {
     // IMU initialize
     initIMU();
     
+    // PWM initialize
+    initPWM();
+    
     __builtin_enable_interrupts();
 
 //    TRISAbits.TRISA4 = 0; // A4 as output
 //    LATAbits.LATA4 = 0;   // A4 initially low
-    unsigned char data[14];
-    short temp_raw, accX_raw, accY_raw, accZ_raw, gyroX_raw, gyroY_raw, gyroZ_raw;
     
+    unsigned char data[14];    
     while(1) {
-        i2c_read_multiple(IMU_ADDRESS, OUT_TEMP_L, data, 14);
+        _CP0_SET_COUNT(0);
+        if (_CP0_GET_COUNT() > 480000) {    // 50 Hz
+            i2c_read_multiple(IMU_ADDRESS, OUT_TEMP_L, data, 14);
+            temp_raw = data[1] << 8 | data[0];
+            gyroX_raw = data[3] << 8 | data[2];
+            gyroY_raw = data[5] << 8 | data[4];
+            gyroZ_raw = data[7] << 8 | data[6];
+            accX_raw = data[9] << 8 | data[8];
+            accY_raw = data[11] << 8 | data[10];
+            accZ_raw = data[13] << 8 | data[12];
+        }
         
-        temp_raw = data[1] << 8 | data[0];
-        gyroX_raw = data[3] << 8 | data[2];
-        gyroY_raw = data[5] << 8 | data[4];
-        gyroZ_raw = data[7] << 8 | data[6];
-        accX_raw = data[9] << 8 | data[8];
-        accY_raw = data[11] << 8 | data[10];
-        accZ_raw = data[13] << 8 | data[12];
     }
         
 }

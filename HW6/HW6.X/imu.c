@@ -18,12 +18,12 @@ void initIMU(void) {
     i2c_write_single(CTRL2_G, 0b10000000);   //init gyro
 }
 
-void i2c_read_multiple(char address, char register, unsigned char * data, char length) {
-    i2c_master_start();                         //ST
-    i2c_master_send(IMU_ADDRESS << 1);          //SAD+W - SAK
-    i2c_master_send(address);                   //SUB - SAK
-    i2c_master_restart();                       //SR
-    i2c_master_send(IMU_ADDRESS << 1 | 0b1);    //SAD+R - SAK
+void i2c_read_multiple(char address, char reg, unsigned char * data, char length) {
+    i2c_master_start();                     //ST
+    i2c_master_send(address << 1);          //SAD+W - SAK
+    i2c_master_send(reg);                   //SUB - SAK
+    i2c_master_restart();                   //SR
+    i2c_master_send(address << 1 | 0b1);    //SAD+R - SAK
     
     unsigned char i;
     for (i=0; i<length; i++) {

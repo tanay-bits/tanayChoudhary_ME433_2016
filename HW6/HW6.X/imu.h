@@ -26,6 +26,6 @@
 
 void initIMU(void);
 void i2c_write_single(unsigned char address, unsigned char data);
-void i2c_read_multiple(char address, char register, unsigned char * data, char length);
+void i2c_read_multiple(char address, char reg, unsigned char * data, char length);
 
 #endif
