@@ -2,8 +2,9 @@
 #include<sys/attribs.h>  // __ISR macro
 #include "ILI9163C.h"    // LCD library
 
-#define CS LATBbits.LATB7  // chip select pin for SPI
-#define A0 LATBbits.LATB15 // A0 pin for SPI
+#define MAX_LENGTH 50   // max string length to be printed on LCD at once
+//#define CS LATBbits.LATB7  // chip select pin for SPI
+//#define A0 LATBbits.LATB15 // A0 pin for SPI
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -108,12 +109,12 @@ int main() {
     
     __builtin_enable_interrupts();
       
-    char channelA = 0;
-    char channelB = 1;
-    unsigned char voltageA;
-    unsigned char voltageB;
-
-//    _CP0_SET_COUNT(0);
+    LCD_clearScreen(WHITE);
+    char message[MAX_LENGTH];
+    int integer = 1337;
+    sprintf(message, "Hello world %d!", integer);
+    LCD_drawString(28, 32, message, RED);
+    
     while(1) {
         ;
     }

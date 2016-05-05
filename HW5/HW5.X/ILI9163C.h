@@ -177,5 +177,7 @@ void LCD_drawPixel(unsigned short, unsigned short, unsigned short); // set the x
 void LCD_setAddr(unsigned short, unsigned short, unsigned short, unsigned short); // set the memory address you are writing to
 void LCD_clearScreen(unsigned short); // set the color of every pixel
 void SPI1_init(void);
+void LCD_drawChar(unsigned short x, unsigned short y, char character, unsigned short color);
+void LCD_drawString(unsigned short x, unsigned short y, char * string, unsigned short color);
 
 #endif

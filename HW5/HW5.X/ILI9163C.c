@@ -189,3 +189,31 @@ void LCD_clearScreen(unsigned short color) {
 			LCD_data16(color);
 		}
 }
+
+void LCD_drawChar(unsigned short x, unsigned short y, char character, unsigned short color) {
+    char i, j;
+    char val;
+    for (i = 0; i < 5; i++) {
+        val = ASCII[character - 32][i];
+        for (j = 0; j < 8; j++) {
+            if (val>>j & 1 == 1) {
+                LCD_drawPixel(x + i, y + j, color);
+            } else {
+                LCD_drawPixel(x + i, y + j, WHITE);
+            }
+        }
+    }
+}
+
+void LCD_drawString(unsigned short x, unsigned short y, char * string, unsigned short color) {
+    short i = 0;
+    while (string[i] != 0) {
+        LCD_drawChar(x, y, string[i], color);
+        x = x + 6;
+        i++;
+        if (x > 123) {
+            x = 0;
+            y = y + 9;
+        }
+    }
+}
