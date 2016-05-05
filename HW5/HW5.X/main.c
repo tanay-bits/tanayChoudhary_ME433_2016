@@ -109,7 +109,7 @@ int main() {
             sprintf(message, "accZ: %f g    ", accZ);
             LCD_drawString(10, 40, message, WHITE);
             
-            sprintf(message, "gyroX raw: %i", gyroX_raw);
+            sprintf(message, "gyroX raw: %i    ", gyroX_raw);
             LCD_drawString(10, 50, message, WHITE);
             
             sprintf(message, "gyroY raw: %i    ", gyroY_raw);

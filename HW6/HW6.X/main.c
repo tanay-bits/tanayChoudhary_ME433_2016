@@ -79,8 +79,11 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) PWM(void) {
     accX = accX_raw * 2.0 / 32768;  // accel in g
     accY = accY_raw * 2.0 / 32768;  // accel in g
     
-    OC1RS = (unsigned int)(1500 + 1500 * accX);
-    OC2RS = (unsigned int)(1500 + 1500 * accY);
+//    OC1RS = (unsigned int)(1500 + 1500 * accX);
+//    OC2RS = (unsigned int)(1500 + 1500 * accY);
+    
+    OC1RS = 2500;
+    OC2RS = 500;
     
     IFS0bits.T2IF = 0; // clear interrupt flag
 }
