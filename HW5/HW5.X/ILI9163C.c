@@ -199,7 +199,7 @@ void LCD_drawChar(unsigned short x, unsigned short y, char character, unsigned s
             if (val>>j & 1 == 1) {
                 LCD_drawPixel(x + i, y + j, color);
             } else {
-                LCD_drawPixel(x + i, y + j, WHITE);
+                LCD_drawPixel(x + i, y + j, BLACK);
             }
         }
     }

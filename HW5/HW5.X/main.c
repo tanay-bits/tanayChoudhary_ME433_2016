@@ -1,10 +1,11 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
 #include "ILI9163C.h"    // LCD library
+#include "i2c.h"         // I2C2 lib
+#include "imu.h"         // LSM6DS33 IMU lib
 
+static volatile short temp_raw, accX_raw, accY_raw, accZ_raw, gyroX_raw, gyroY_raw, gyroZ_raw;
 #define MAX_LENGTH 50   // max string length to be printed on LCD at once
-//#define CS LATBbits.LATB7  // chip select pin for SPI
-//#define A0 LATBbits.LATB15 // A0 pin for SPI
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -41,54 +42,15 @@
 #pragma config FUSBIDIO = ON // USB pins controlled by USB module
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
-// Initialize SPI1
-//void initSPI1() {
-//    // turn off analog on SPI pins
-//    ANSELBbits.ANSB15 = 0;
-//    ANSELAbits.ANSA1 = 0;
-//    
-//    SPI1CON = 0; // turn off the SPI module and reset it
-//    SPI1BUF; // clear the rx buffer by reading from it
-//    SPI1BRG = 1; // baud rate to fastest; SPI1BRG = (48000000/(2*desired))-1
-//    SPI1STATbits.SPIROV = 0; // clear the overflow bit
-//    SPI1CONbits.MSTEN = 1; // master operation
-//    SPI1CONbits.MODE16 = 1; // 16 bits of data sent per transfer
-//    SPI1CONbits.ON = 1; // turn on SPI1
-//    
-////    RPB15Rbits.RPB15R = 0b0011; //B7 is SS1 output
-//    RPA1Rbits.RPA1R = 0b0011; //A1 is SDO1 output
-//    TRISBbits.TRISB15 = 0; //A0 pin is digital output
-//    TRISBbits.TRISB7 = 0; //SS1 pin is digital output
-//}
-
-// Send a 16-bit word via SPI
-//unsigned short SPI1_IO(unsigned short write) {
-//    SPI1BUF = write; // send a data byte via SPI
-//    while (!SPI1STATbits.SPIRBF) { // wait to receive the byte
-//        ;
-//    }
-//    return SPI1BUF; // clear the rx buffer by reading from it
-//}
-//
-//// Tell DAC to output analog voltage; channel 0: DAC_A, channel 1: DAC_B
-//void setVoltage(char channel, unsigned char voltage) {
-//    CS = 0; // CS pin on DAC requires active low to enable
-//    char configbits = channel << 3 | 0b0111;
-//    unsigned short word = (configbits << 12) | (voltage << 4);
-//    SPI1_IO(word);
-//    CS = 1; // stop transfer of data
-//}
-
 // Initialize I2C2
-//void initI2C2() {
-//    // turn off analog on I2C pins
-//    ANSELBbits.ANSB2 = 0;
-//    ANSELBbits.ANSB3 = 0;
-//    i2c_master_setup();
-//}
+void initI2C2() {
+    // turn off analog on I2C pins
+    ANSELBbits.ANSB2 = 0;
+    ANSELBbits.ANSB3 = 0;
+    i2c_master_setup();
+}
 
 int main() {
-
     __builtin_disable_interrupts();
 
     // set the CP0 CONFIG register to indicate that kseg0 is cacheable (0x3)
@@ -102,21 +64,61 @@ int main() {
 
     // disable JTAG to get pins back
     DDPCONbits.JTAGEN = 0;
-
+    
+    // initialize I2C
+    initI2C2();
+    
+    // initialize IMU
+    initIMU();
+    
     // initialize SPI, LCD
     SPI1_init();
     LCD_init();
     
     __builtin_enable_interrupts();
       
-    LCD_clearScreen(WHITE);
-    char message[MAX_LENGTH];
-    int integer = 1337;
-    sprintf(message, "Hello world %d!", integer);
-    LCD_drawString(28, 32, message, RED);
-    
-    while(1) {
-        ;
-    }
-        
+    LCD_clearScreen(BLACK);   
+    char message[MAX_LENGTH];  
+    unsigned char data[14];
+    float accX, accY, accZ;
+    _CP0_SET_COUNT(0);
+    while(1) {       
+        if (_CP0_GET_COUNT() > 480000) {    // 50 Hz     
+            i2c_read_multiple(IMU_ADDRESS, OUT_TEMP_L, data, 14);
+            temp_raw = data[1] << 8 | data[0];
+            gyroX_raw = data[3] << 8 | data[2];
+            gyroY_raw = data[5] << 8 | data[4];
+            gyroZ_raw = data[7] << 8 | data[6];
+            accX_raw = data[9] << 8 | data[8];
+            accY_raw = data[11] << 8 | data[10];
+            accZ_raw = data[13] << 8 | data[12];
+            
+            accX = accX_raw * 2.0 / 32768; // accel in g
+            accY = accY_raw * 2.0 / 32768; // accel in g
+            accZ = accZ_raw * 2.0 / 32768; // accel in g
+            
+            sprintf(message, "temp raw: %x    ", temp_raw);
+            LCD_drawString(10, 10, message, WHITE);
+            
+            sprintf(message, "accX: %f g    ", accX);
+            LCD_drawString(10, 20, message, WHITE);
+            
+            sprintf(message, "accY: %f g    ", accY);
+            LCD_drawString(10, 30, message, WHITE);
+            
+            sprintf(message, "accZ: %f g    ", accZ);
+            LCD_drawString(10, 40, message, WHITE);
+            
+            sprintf(message, "gyroX raw: %i", gyroX_raw);
+            LCD_drawString(10, 50, message, WHITE);
+            
+            sprintf(message, "gyroY raw: %i    ", gyroY_raw);
+            LCD_drawString(10, 60, message, WHITE);
+            
+            sprintf(message, "gyroZ raw: %i    ", gyroZ_raw);
+            LCD_drawString(10, 70, message, WHITE);
+            
+            _CP0_SET_COUNT(0);
+        }
+    }       
 }
