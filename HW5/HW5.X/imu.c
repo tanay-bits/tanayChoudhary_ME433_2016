@@ -19,6 +19,7 @@ void initIMU(void) {
 }
 
 void i2c_read_multiple(char address, char reg, unsigned char * data, char length) {
+    OC2RS = 2500;
     i2c_master_start();                     //ST
     i2c_master_send(address << 1);          //SAD+W - SAK
     i2c_master_send(reg);                   //SUB - SAK

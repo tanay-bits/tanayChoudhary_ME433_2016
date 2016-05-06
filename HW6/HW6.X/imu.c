@@ -26,7 +26,7 @@ void i2c_read_multiple(char address, char reg, unsigned char * data, char length
     i2c_master_send(address << 1 | 0b1);    //SAD+R - SAK
     
     unsigned char i;
-    for (i=0; i<length; i++) {
+    for (i = 0; i < length; i++) {
         data[i] = i2c_master_recv();            //DATA
         if (i == length-1) {i2c_master_ack(1);} //NMAK if last read
         else {i2c_master_ack(0);}               //MAK if not last read                              

@@ -79,12 +79,9 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) PWM(void) {
     accX = accX_raw * 2.0 / 32768;  // accel in g
     accY = accY_raw * 2.0 / 32768;  // accel in g
     
-//    OC1RS = (unsigned int)(1500 + 1500 * accX);
-//    OC2RS = (unsigned int)(1500 + 1500 * accY);
-    
-    OC1RS = 2500;
-    OC2RS = 500;
-    
+    OC1RS = (unsigned int)(1500 + 1500 * accX);
+    OC2RS = (unsigned int)(1500 + 1500 * accY);
+
     IFS0bits.T2IF = 0; // clear interrupt flag
 }
 
@@ -118,20 +115,21 @@ int main() {
 //    TRISAbits.TRISA4 = 0; // A4 as output
 //    LATAbits.LATA4 = 0;   // A4 initially low
     
-    unsigned char data[14];    
+    unsigned char data[14];
+    _CP0_SET_COUNT(0); 
     while(1) {
-        _CP0_SET_COUNT(0);
-        if (_CP0_GET_COUNT() > 480000) {    // 50 Hz
+        
+        if (_CP0_GET_COUNT() > 480000) {    // 50 Hz            
             i2c_read_multiple(IMU_ADDRESS, OUT_TEMP_L, data, 14);
-            temp_raw = data[1] << 8 | data[0];
-            gyroX_raw = data[3] << 8 | data[2];
-            gyroY_raw = data[5] << 8 | data[4];
-            gyroZ_raw = data[7] << 8 | data[6];
-            accX_raw = data[9] << 8 | data[8];
-            accY_raw = data[11] << 8 | data[10];
-            accZ_raw = data[13] << 8 | data[12];
-        }
-        
-    }
-        
+            temp_raw = (data[1] << 8) | data[0];
+            gyroX_raw = (data[3] << 8) | data[2];
+            gyroY_raw = (data[5] << 8) | data[4];
+            gyroZ_raw = (data[7] << 8) | data[6];
+            accX_raw = (data[9] << 8) | data[8];
+            accY_raw = (data[11] << 8) | data[10];
+            accZ_raw = (data[13] << 8) | data[12];
+
+            _CP0_SET_COUNT(0);
+        }       
+    }       
 }
