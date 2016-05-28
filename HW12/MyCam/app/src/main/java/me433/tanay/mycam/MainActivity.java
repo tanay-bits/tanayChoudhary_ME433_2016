@@ -1,4 +1,4 @@
-package io.github.tanay_bits.mycam;
+package me433.tanay.mycam;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -12,6 +12,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.SeekBar;
 import java.io.IOException;
 import static android.graphics.Color.blue;
 import static android.graphics.Color.green;
@@ -28,6 +29,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     private TextView mTextView;
 
     static long prevtime = 0; // for FPS calculation
+    static int thresh = 600;  // for getting threshold from slider
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +46,38 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
         paint1.setColor(0xffff0000); // red
         paint1.setTextSize(24);
+
+        myControl = (SeekBar) findViewById(R.id.seek);
+        sliderTextView = (TextView) findViewById(R.id.sliderStatus);
+        sliderTextView.setText("Enter threshold");
+
+        setMyControlListener();
+    }
+    SeekBar myControl;
+    TextView sliderTextView;
+
+    public void setMyControlListener() {
+        myControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            int progressChanged = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                progressChanged = progress;
+                thresh = progress*10;
+                sliderTextView.setText("Threshold is: "+progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
@@ -52,7 +86,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         parameters.setPreviewSize(640, 480);
         parameters.setColorEffect(Camera.Parameters.EFFECT_MONO); // black and white
         parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY); // no autofocusing
-//        parameters.setAutoWhiteBalanceLock(true);
+//        parameters.setAutoWhiteBalanceLock(true);   // no auto white-balancing
         mCamera.setParameters(parameters);
         mCamera.setDisplayOrientation(90); // rotate to portrait mode
 
@@ -97,7 +131,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 // sum the red, green and blue, subtract from 255 to get the darkness of the pixel.
                 // if it is greater than some value (600 here), consider it black
                 // play with the 600 value if you are having issues reliably seeing the line
-                if (255*3-(red(pixels[i])+green(pixels[i])+blue(pixels[i])) > 600) {
+                if (255*3-(red(pixels[i])+green(pixels[i])+blue(pixels[i])) > thresh) {
                     thresholdedPixels[i] = 255*3;
                 }
                 else {

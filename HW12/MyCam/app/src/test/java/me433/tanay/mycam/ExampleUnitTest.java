@@ -1,4 +1,4 @@
-package io.github.tanay_bits.mycam;
+package me433.tanay.mycam;
 
 import org.junit.Test;
 
