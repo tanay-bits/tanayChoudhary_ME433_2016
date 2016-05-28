@@ -6,7 +6,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:weightSum="1">
 
     <SeekBar
         android:id="@+id/seek"
@@ -28,12 +29,14 @@
     <SurfaceView
         android:id="@+id/surfaceview"
         android:layout_width="640px"
-        android:layout_height="178dp" />
+        android:layout_height="171dp"
+        android:layout_weight="0.23" />
 
     <TextureView
         android:id="@+id/textureview"
         android:layout_width="640px"
-        android:layout_height="180dp" />
+        android:layout_height="180dp"
+        android:layout_weight="0.35" />
 
     <TextView
         android:id="@+id/sliderStatus"

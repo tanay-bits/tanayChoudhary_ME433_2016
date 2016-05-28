@@ -120,8 +120,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
             int[] pixels_mid = new int[bmp.getWidth()];
             int[] pixels_bottom = new int[bmp.getWidth()];
             int startYtop = 15; // which row in the bitmap to analyse to read
-            int startYmid = 60; // which row in the bitmap to analyse to read
-            int startYbottom = 100; // which row in the bitmap to analyse to read
+            int startYmid = 160; // which row in the bitmap to analyse to read
+            int startYbottom = 300; // which row in the bitmap to analyse to read
             // only look at three rows in the image
             bmp.getPixels(pixels_top, 0, bmp.getWidth(), 0, startYtop, bmp.getWidth(), 1); // (array name, offset inside array, stride (size of row), start x, start y, num pixels to read per row, num rows to read)
             bmp.getPixels(pixels_mid, 0, bmp.getWidth(), 0, startYmid, bmp.getWidth(), 1);
@@ -215,8 +215,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             // also write the value as text
             canvas.drawText("COM top = " + COM_top, 10, 200, paint1);
-            canvas.drawText("COM mid = " + COM_mid, 10, 220, paint1);
-            canvas.drawText("COM bottom = " + COM_bottom, 10, 240, paint1);
+            canvas.drawText("COM mid = " + COM_mid, 10, 230, paint1);
+            canvas.drawText("COM bottom = " + COM_bottom, 10, 260, paint1);
             c.drawBitmap(bmp, 0, 0, null);
             mSurfaceHolder.unlockCanvasAndPost(c);
 
