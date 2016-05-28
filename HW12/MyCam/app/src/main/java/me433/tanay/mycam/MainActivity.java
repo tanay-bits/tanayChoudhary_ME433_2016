@@ -148,12 +148,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 wbCOM_top = wbCOM_top + thresholdedPixels_top[i]*i;
             }
             int COM_top;
+            boolean topFlag;
             //watch out for divide by 0
             if (wbTotal_top<=0) {
                 COM_top = bmp.getWidth()/2;
+                topFlag = false;
             }
             else {
                 COM_top = wbCOM_top/wbTotal_top;
+                topFlag = true;
             }
 
             // MIDDLE:
@@ -174,12 +177,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 wbCOM_mid = wbCOM_mid + thresholdedPixels_mid[i]*i;
             }
             int COM_mid;
+            boolean midFlag;
             //watch out for divide by 0
             if (wbTotal_mid<=0) {
                 COM_mid = bmp.getWidth()/2;
+                midFlag = false;
             }
             else {
                 COM_mid = wbCOM_mid/wbTotal_mid;
+                midFlag = true;
             }
 
             // BOTTOM:
@@ -200,23 +206,32 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
                 wbCOM_bottom = wbCOM_bottom + thresholdedPixels_bottom[i]*i;
             }
             int COM_bottom;
+            boolean bottomFlag;
             //watch out for divide by 0
             if (wbTotal_bottom<=0) {
                 COM_bottom = bmp.getWidth()/2;
+                bottomFlag = false;
             }
             else {
                 COM_bottom = wbCOM_bottom/wbTotal_bottom;
+                bottomFlag = true;
             }
 
             // draw a circle where you think the COM is
-            canvas.drawCircle(COM_top, startYtop, 5, paint1);
-            canvas.drawCircle(COM_mid, startYmid, 5, paint1);
-            canvas.drawCircle(COM_bottom, startYbottom, 5, paint1);
-
             // also write the value as text
-            canvas.drawText("COM top = " + COM_top, 10, 200, paint1);
-            canvas.drawText("COM mid = " + COM_mid, 10, 230, paint1);
-            canvas.drawText("COM bottom = " + COM_bottom, 10, 260, paint1);
+            if (topFlag) {
+                canvas.drawCircle(COM_top, startYtop, 5, paint1);
+                canvas.drawText("COM top = " + COM_top, 10, 200, paint1);
+            }
+            if (midFlag) {
+                canvas.drawCircle(COM_mid, startYmid, 5, paint1);
+                canvas.drawText("COM mid = " + COM_mid, 10, 230, paint1);
+            }
+            if (bottomFlag) {
+                canvas.drawCircle(COM_bottom, startYbottom, 5, paint1);
+                canvas.drawText("COM bottom = " + COM_bottom, 10, 260, paint1);
+            }
+
             c.drawBitmap(bmp, 0, 0, null);
             mSurfaceHolder.unlockCanvasAndPost(c);
 
