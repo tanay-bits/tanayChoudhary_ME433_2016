@@ -1,0 +1,1 @@
+describe how your robot worked - did you use one or more sliders in the app? What were they for? What information was sent to the PIC? How did the PIC use that information? Add any other relevant information.
